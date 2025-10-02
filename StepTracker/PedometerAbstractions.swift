@@ -14,16 +14,14 @@ protocol PedometerLike: AnyObject {
     func start(from: Date, onUpdate: @escaping (CMPedometerData?, Error?) -> Void)
     func stop()
     func query(from: Date, to: Date, completion: @escaping (CMPedometerData?, Error?) -> Void)
-    
-    
 }
 
 final class RealPedometerService: PedometerLike {
     private let pedometer = CMPedometer()
     
-    func isStepCountingAvailable() -> Bool { CMPedometer.isStepCountingAvailable()}
+    func isStepCountingAvailable() -> Bool { CMPedometer.isStepCountingAvailable() }
     
-    func authorizationStatus() -> CMAuthorizationStatus { CMPedometer.authorizationStatus()}
+    func authorizationStatus() -> CMAuthorizationStatus { CMPedometer.authorizationStatus() }
     
     func start(from: Date, onUpdate: @escaping (CMPedometerData?, Error?) -> Void) {
         pedometer.startUpdates(from: from, withHandler: onUpdate)
@@ -57,9 +55,8 @@ final class MockPedometerService: PedometerLike {
                                            start: self.startDate,
                                            end: Date())
             onUpdate(mock, nil)
-            
         }
-        RunLoop.main.add(timer?, forMode: .common)
+        RunLoop.main.add(timer!, forMode: .common)
     }
     
     func stop() { timer?.invalidate(); timer = nil }
@@ -67,9 +64,10 @@ final class MockPedometerService: PedometerLike {
     func query(from: Date, to: Date, completion: @escaping (CMPedometerData?, Error?) -> Void) {
         let mock = CMPedometerDataMock(steps: steps,
                                        distanceMeters: Double(steps) * 0.7,
-                                       floors: steps / 100
-                                       start: from, end: to)
-        completion(mock, nil
+                                       floors: steps / 100,
+                                       start: from,
+                                       end: to)
+        completion(mock, nil)
     }
 }
 
@@ -88,9 +86,9 @@ final class CMPedometerDataMock: CMPedometerData {
         _endDate = end
         super.init()
     }
+    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
-        
     }
     
     override var numberOfSteps: NSNumber { _numberOfSteps }
@@ -98,5 +96,4 @@ final class CMPedometerDataMock: CMPedometerData {
     override var floorsAscended: NSNumber? { _floorsAscended }
     override var startDate: Date { _startDate }
     override var endDate: Date { _endDate }
-    
 }

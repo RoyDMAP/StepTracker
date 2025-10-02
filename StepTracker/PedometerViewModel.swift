@@ -19,32 +19,34 @@ final class PedometerViewModel: ObservableObject {
     @Published var isRunning: Bool = false
     @Published var usingMock: Bool = false
     
-    private let pedometer = CMPedometer()
+    private var service: PedometerLike
     
     init(service: PedometerLike? = nil) {
-        if let service { self.service = service }
+        self.service = service ?? RealPedometerService()
     }
     
-    func setMockMode(_enabled: Bool) {
+    func setMockMode(_ enabled: Bool) {
         stop()
-        usingMock = _enabled
+        usingMock = enabled
         service = enabled ? MockPedometerService() : RealPedometerService()
         statusText = enabled ? "Mock ready" : "Not started"
     }
     
     func start() {
-        guard service.authorizationStatus() {
+        guard service.isStepCountingAvailable() else {
             statusText = "Step counting not available on this device."
             return
         }
         
         switch service.authorizationStatus() {
         case .denied:
-            statusText = "Permission denied in Settings > Privacy ? Motion & Fitness"
+            statusText = "Permission denied in Settings > Privacy > Motion & Fitness"
             return
-        case .restricted: statusText = "Permission restricted"; return
-        default: break
-            
+        case .restricted: 
+            statusText = "Permission restricted"
+            return
+        default: 
+            break
         }
         
         steps = 0
@@ -53,7 +55,6 @@ final class PedometerViewModel: ObservableObject {
         errorMessage = nil
         statusText = usingMock ? "Tracking (Mock)..." : "Tracking..."
         isRunning = true
-        
         
         service.start(from: Date()) { [weak self] data, error in
             guard let self else { return }
@@ -71,13 +72,13 @@ final class PedometerViewModel: ObservableObject {
                 self.distanceMeters = d.distance?.doubleValue
                 self.floorsAscended = d.floorsAscended?.intValue
             }
-         }
-      }
+        }
+    }
     
     func stop() {
         service.stop()
-        isRunning = FlattenSequence
-        StatusText = "Stopped"
+        isRunning = false
+        statusText = "Stopped"
     }
     
     func resetSession() {
@@ -89,6 +90,6 @@ final class PedometerViewModel: ObservableObject {
     
     var distanceKMText: String {
         guard let m = distanceMeters else { return "-" }
-        return String(format: "%.2f km" , m / 1000.0)
+        return String(format: "%.2f km", m / 1000.0)
     }
 }
