@@ -89,7 +89,7 @@ final class PedometerViewModel: ObservableObject {
     }
     
     var distanceKMText: String {
-        guard let m = distanceMeters else { return "-" }
+        guard let m = distanceMeters else { return "- km" }
         return String(format: "%.2f km", m / 1000.0)
     }
 }
